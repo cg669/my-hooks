@@ -1,21 +1,116 @@
-import React from "react";
-import Navbar from "./../../components/Navbar";
-import HomePage from "./../home";
-import AboutPage from "./../about";
-import FaqPage from "./../faq";
-import PricingPage from "./../pricing";
-import ContactPage from "./../contact";
-import DashboardPage from "./../dashboard";
-import SigninPage from "./../signin";
-import SignupPage from "./../signup";
-import ForgotpassPage from "./../forgotpass";
-import ChangepassPage from "./../changepass";
-import { Switch, Route, Router } from "./../../util/router.js";
-import Divider from "./../../components/Divider";
-import Footer from "./../../components/Footer";
-// import analytics from "./../../util/analytics.js";
-import { ProvideAuth } from "./../../util/auth.js";
-import "./styles.scss";
+import React from "react"
+import Navbar from "./../../components/Navbar"
+import { Switch, Route, Router } from "./../../util/router.js"
+
+import Divider from "./../../components/Divider"
+
+import Footer from "./../../components/Footer"
+
+import { ProvideAuth } from "./../../util/auth.js"
+
+import Loadable from 'react-loadable'
+
+import { Helmet } from 'react-helmet'
+
+import "./styles.scss"
+
+
+const MyLoadingComponent = ({ isLoading, error }) => {
+  // Handle the loading state
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+  // Handle the error state
+  else if (error) {
+    return <div>Sorry, there was a problem loading the page.</div>;
+  }
+  else {
+    // NProgress.done()
+    return null;
+  }
+}
+
+const AsyncHomePage = Loadable({
+  loader: () => import("./../home"),
+  loading: MyLoadingComponent
+})
+
+const AsyncAboutPage = Loadable({
+  loader: () => import("./../about"),
+  loading: MyLoadingComponent
+})
+
+const AsyncContactPage = Loadable({
+  loader: () => import("./../contact"),
+  loading: MyLoadingComponent
+})
+
+const routeList = [
+  {
+    path: '/home',
+    component: AsyncHomePage,
+    title: '首页',
+  },
+  {
+    path: '/about',
+    component: AsyncAboutPage,
+    title: '其他',
+  },
+  {
+    path: '/contact',
+    component: AsyncContactPage,
+    title: '联系我们',
+  }
+]
+// const WithTitleRoute = ({ component: Component, title, ...rest }) => {
+//   return (
+//     <Route {...rest} render={routeProps => (
+//       <Component {...routeProps} />
+//     )} />
+//   )
+// }
+
+
+
+
+const NotFound = ({ location }) => {
+  return (
+    <div
+      style={{
+        padding: "50px",
+        width: "100%",
+        textAlign: "center"
+      }}
+    >
+      The page <code>{location.pathname}</code> could not be
+      found.
+    </div>
+  );
+}
+
+const WithTitleRoute = ({ component: Component, ...rest }) => {
+  return (
+    <Route {...rest} render={routeProps => (
+      <>
+        <Helmet>
+          <title>{rest.title}</title>
+        </Helmet>
+        <Component {...routeProps} />
+      </>
+    )} />
+  )
+}
+
+function generateRoute(list) {
+  return list && list.length > 0 && list.map((item, index) => (
+    <WithTitleRoute
+      exact
+      key={index}
+      {...item}
+    />
+  )
+  )
+}
 
 function App(props) {
   return (
@@ -29,42 +124,11 @@ function App(props) {
           />
 
           <Switch>
-            <Route exact path="/" component={HomePage} />
-
-            <Route exact path="/about" component={AboutPage} />
-
-            <Route exact path="/faq" component={FaqPage} />
-
-            <Route exact path="/pricing" component={PricingPage} />
-
-            <Route exact path="/contact" component={ContactPage} />
-
-            <Route exact path="/dashboard" component={DashboardPage} />
-
-            <Route exact path="/signin" component={SigninPage} />
-
-            <Route exact path="/signup" component={SignupPage} />
-
-            <Route exact path="/forgotpass" component={ForgotpassPage} />
-
-            <Route exact path="/changepass" component={ChangepassPage} />
-
-            <Route
-              component={({ location }) => {
-                return (
-                  <div
-                    style={{
-                      padding: "50px",
-                      width: "100%",
-                      textAlign: "center"
-                    }}
-                  >
-                    The page <code>{location.pathname}</code> could not be
-                    found.
-                  </div>
-                );
-              }}
-            />
+            <Route exact path="/" component={AsyncHomePage} />
+            {
+              generateRoute(routeList)
+            }
+            <Route component={NotFound} />
           </Switch>
 
           <Divider color="light" />
